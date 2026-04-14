@@ -107,7 +107,7 @@ public class CosyCritters {
         if (Util.isNewMoon(minecraft.level)) {
             if (minecraft.player.isSleeping()) {
                 if (!wasSleeping) {
-                    trySpawnHatman(minecraft);
+                    if (config.spawnHatman) trySpawnHatman(minecraft);
                     wasSleeping = true;
                 }
             } else if (wasSleeping) {
@@ -116,7 +116,7 @@ public class CosyCritters {
         }
     }
     public static void trySpawnHatman(Minecraft minecraft) {
-        if (!config.spawnHatman && minecraft.level.getRandom().nextFloat() < 0.1) return;
+        if (minecraft.level.getRandom().nextBoolean()) return;
         final Optional<BlockPos> sleepingPos = minecraft.player.getSleepingPos();
         if (sleepingPos.isPresent()) {
             BlockState state = minecraft.level.getBlockState(sleepingPos.get());
@@ -134,7 +134,6 @@ public class CosyCritters {
         }
     }
     public static void trySpawnBird(ClientLevel level) {
-
         if (    config.spawnBird
                 && Util.isDay(level)
                 && BirdParticle.birds.size() < config.maxBirds
@@ -144,8 +143,10 @@ public class CosyCritters {
             int x = level.getRandom().nextIntBetweenInclusive((int) (player.x - config.bird.despawnDistance), (int) (player.x + config.bird.despawnDistance));
             int z = level.getRandom().nextIntBetweenInclusive((int) (player.z - config.bird.despawnDistance), (int) (player.z + config.bird.despawnDistance));
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+            final BlockPos blockPos = BlockPos.containing(x, y - 1, z);
             if (    Vector3d.distance(x, y, z, player.x, player.y, player.z) > config.bird.reactionDistance
-                    && config.bird.biomes.contains(level.getBiome(BlockPos.containing(x, y, z)))
+                    && config.bird.biomeList.contains(level.getBiome(blockPos))
+                    && config.bird.blockList.contains(level.getBlockState(blockPos).getBlockHolder())
             ) {
                 Minecraft.getInstance().particleEngine.add(new BirdParticle(level, x + 0.5F, y + 0.5F, z + 0.5F));
             }
